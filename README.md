@@ -1,1 +1,1 @@
-# Fellings Project with Next.js
+# Feelings Project with Next.js
