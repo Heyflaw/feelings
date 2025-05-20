@@ -42,8 +42,9 @@
   width: 100%;
   max-width: var(--container-max);
   display: flex;
-  justify-content: left;
+  justify-content: center;
   padding: 0 178px;
+  gap: 40px;
 }
 .left-content {
   display: flex;
@@ -194,22 +195,22 @@
 }
 
 /* Visuel (rectangle rose + p5.js) */
-.frame-8 {
+.right-content {
   display: flex;
   justify-content: flex-end;
-  width: 500px;
-  height: 500px;
+  width: 600px;
+  height: 600px;
 }
 .rectangle-1 {
   border-radius: var(--shape-radius);
-  width: 500px;
-  height: 500px;
+  width: 600px;
+  height: 600px;
   position: relative;
   overflow: hidden;
 }
 #p5-container {
-  width: 500px;
-  height: 500px;
+  width: 600px;
+  height: 600px;
   display: flex;
   justify-content: center;
   align-items: center;

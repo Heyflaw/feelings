@@ -157,7 +157,7 @@ export default function HomePage() {
         </div>
 
         {/* 3. Sketch P5 via iframe */}
-        <div className="frame-8">
+        <div className="right-content">
           <div className="rectangle-1">
             <GenerativeSketchIframe
               key={regenerateTrigger}

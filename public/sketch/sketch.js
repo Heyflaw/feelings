@@ -90,8 +90,8 @@ const layerOptions = [
  ***********************************/
 const globalConfig = {
   general: {
-    canvasWidth: 500,
-    canvasHeight: 500,
+    canvasWidth: 600,
+    canvasHeight: 600,
     margin: 50,
     numCols: 5,
     numRows: 5,
