@@ -1,0 +1,64 @@
+/* src/components/Footer.module.css */
+.footerContainer {
+  background-color: #000;
+  color: #fff;
+  border-radius: 10px;
+  width: 100%;
+  max-width: 1200px;
+  margin: 1rem auto;
+  padding: 1rem 2rem;
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  font-size: small;
+}
+
+.left,
+.right {
+  display: flex;
+  flex-direction: column;
+}
+
+/* … tes styles .left, .top, .bottom, etc. … */
+
+.right {
+  /* on pousse les items à droite */
+  align-items: flex-end;
+  /* on aligne le texte à droite dans cet élément */
+  text-align: right;
+}
+
+.right a {
+  /* pour que le text-align: right parent s’applique correctement */
+  display: inline-block;
+  text-decoration: underline;
+  color: #fff;
+  font-weight: 500;
+}
+
+.top {
+  display: flex;
+  align-items: center;
+}
+
+.logoAbstract {
+  width: 6rem; /* ajuste la largeur comme tu veux */
+  height: auto; /* conserve les proportions */
+  margin-left: 10px;
+}
+
+.logoHighlight {
+  width: 6rem; /* ajuste la largeur comme tu veux */
+  height: auto; /* conserve les proportions */
+  margin-left: 5px;
+}
+
+.bottom {
+  display: flex; /* ligne */
+  align-items: center; /* alignement vertical */
+  gap: 0.5rem; /* espacement entre texte et logo */
+  margin-top: 0.5rem;
+}
+.link {
+  text-decoration: underline;
+}

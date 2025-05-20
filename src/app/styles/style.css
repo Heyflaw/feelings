@@ -1,0 +1,237 @@
+/* ================================
+   STRUCTURE & STYLES PRINCIPAUX
+   ================================ */
+
+/* Conteneur principal */
+.desktop-1 {
+  background: var(--color-bg);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  overflow: hidden;
+  margin-bottom: 60px;
+}
+
+/* FEELINGS (titre) */
+.hero__header {
+  width: 100vw;
+  display: flex;
+  justify-content: center;
+  align-items: flex-start;
+  height: 296px;
+  flex-shrink: 0;
+  margin-bottom: 40px; /* <-- espace supplémentaire */
+}
+.hero__title {
+  width: 100%;
+  color: var(--color-black);
+  text-align: center;
+  font-family: var(--font-heading);
+  font-size: 291px;
+  line-height: 1;
+  letter-spacing: 0.02em;
+  font-weight: 600;
+  text-transform: uppercase;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* HERO (deux colonnes) */
+.content {
+  width: 100%;
+  max-width: var(--container-max);
+  display: flex;
+  justify-content: left;
+  padding: 0 178px;
+}
+.left-content {
+  display: flex;
+  flex-direction: column; /* si tu veux garder l’empilement vertical */
+  gap: 40px;
+  align-items: flex-start;
+  margin-right: 40px;
+}
+
+/* Colonne gauche, haut */
+.hero__content {
+  display: flex;
+  flex-direction: column;
+  gap: 19px;
+  align-items: flex-start;
+}
+.intro-text {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 10px;
+  position: relative;
+  margin-bottom: 30px;
+}
+.text-feeling {
+  font-family: var(--font-base);
+  font-size: 18px;
+  line-height: 1.1;
+  letter-spacing: -0.025em;
+  color: var(--color-text);
+  position: relative;
+  width: 343px;
+}
+
+.intro-titre {
+  font-family: var(--font-base);
+  font-size: 30px;
+  line-height: 1.1;
+  letter-spacing: -0.025em;
+  color: var(--color-text);
+  position: static !important;
+  left: 0;
+  top: 0;
+  width: 343px;
+}
+
+.wl-titre {
+  font-family: var(--font-base);
+  font-size: 30px;
+  line-height: 1.1;
+  letter-spacing: -0.025em;
+  color: var(--color-text);
+  position: static !important;
+  left: 0;
+  top: 0;
+  width: 343px;
+}
+
+.mint-info {
+  margin: 5px 0;
+  font-family: var(--font-base);
+  font-size: 16px;
+  line-height: 1.4;
+  color: var(--color-text);
+}
+
+.mint-info p {
+  margin: 4px 0;
+}
+
+/* Boutons */
+.button {
+  background: var(--color-black);
+  border-radius: var(--btn-radius);
+  padding: 10px 16px;
+  display: flex;
+  cursor: pointer;
+  color: #fff;
+  align-items: center;
+  gap: 8px;
+  align-self: flex-start;
+  width: auto;
+  border: 1px solid transparent;
+  transition: background-color 0.2s ease, border-color 0.2s ease,
+    transform 0.2s ease;
+}
+.button__icon {
+  width: 16px;
+  height: 16px;
+  fill: currentColor;
+  transition: color 0.2s ease;
+}
+.generate-btn {
+  font-family: var(--font-heading);
+  font-size: 12px;
+  font-weight: 500;
+  letter-spacing: 0.02em;
+  color: #fff;
+  text-transform: uppercase;
+  transition: color 0.2s ease;
+}
+.wl-btn {
+  font-family: var(--font-heading);
+  font-size: 12px;
+  font-weight: 500;
+  letter-spacing: 0.02em;
+  color: #fff;
+  text-transform: uppercase;
+  transition: color 0.2s ease;
+}
+
+/* Hover state */
+.button:hover {
+  background: #fff;
+  border-color: var(--color-black);
+  transform: scale(1.05);
+}
+.button:hover .wl-btn,
+.button:hover .generate-btn,
+.button:hover .button__icon {
+  color: var(--color-black);
+}
+
+/* Colonne gauche, bas */
+.wl-content {
+  display: flex;
+  flex-direction: column;
+  gap: 19px;
+  align-items: flex-start;
+}
+
+.frame-10 {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 10px;
+  position: relative;
+  margin-bottom: 20px;
+}
+.wl-text {
+  font-family: var(--font-base);
+  font-size: 18px;
+  line-height: 1.1;
+  letter-spacing: -0.025em;
+  color: var(--color-text);
+  position: relative;
+  width: 343px;
+}
+
+/* Visuel (rectangle rose + p5.js) */
+.frame-8 {
+  display: flex;
+  justify-content: flex-end;
+  width: 500px;
+  height: 500px;
+}
+.rectangle-1 {
+  border-radius: var(--shape-radius);
+  width: 500px;
+  height: 500px;
+  position: relative;
+  overflow: hidden;
+}
+#p5-container {
+  width: 500px;
+  height: 500px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+#p5-container canvas {
+  display: block;
+}
+
+/* Réduire la taille du texte pour le statut de connexion */
+.connection-status {
+  white-space: pre-wrap;
+  font-size: 0.75rem; /* ou 0.875rem selon tes préférences */
+  line-height: 1.2; /* pour garder une bonne lisibilité */
+  color: var(--success-color, #000000);
+  margin-top: 0.5rem; /* espace juste en-dessous du bouton */
+  word-break: break-all; /* pour couper l’adresse si elle est trop longue */
+  max-width: 100%; /* évite de forcer le conteneur à s’agrandir */
+}
+
+/* Si tu veux cibler spécifiquement l’adresse sans toucher le reste */
+.connection-status .address {
+  font-size: 0.75rem;
+  font-weight: 400;
+}

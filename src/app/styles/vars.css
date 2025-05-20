@@ -1,0 +1,48 @@
+/* ================================
+   RESET & CSS VARIABLES
+   ================================ */
+
+:root {
+  /* couleurs */
+  --color-bg: #f4f5ef;
+  --color-text: #171615;
+  --color-yellow: #ffe090;
+  --color-red: #fcaaaa;
+  --color-black: #000;
+
+  /* rayons */
+  --btn-radius: 4px;
+  --shape-radius: 30px;
+
+  /* dimensions (à ajuster sur ta maquette) */
+  /* --hero-yellow-h: 250px;*/
+  /* --hero-red-h: 650px;*/
+  --container-max: 1440px;
+
+  /* typo */
+  --font-base: Arial, sans-serif;
+  --font-heading: "Rethink", sans-serif;
+}
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+  text-decoration: none;
+  border: none;
+}
+
+body {
+  font-family: var(--font-base);
+  color: var(--color-text);
+  background: var(--color-bg);
+  -webkit-font-smoothing: antialiased;
+}
+
+ul,
+ol,
+menu {
+  list-style: none;
+}
