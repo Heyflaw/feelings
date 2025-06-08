@@ -8,26 +8,31 @@
       body {
         margin: 0;
         padding: 0;
+        overflow: hidden;
         width: 100%;
         height: 100%;
-        overflow: hidden;
       }
 
       #p5-container {
-        width: 600px;
-        height: 600px;
+        width: 100%;
+        max-width: 600px;
+        aspect-ratio: 1 / 1;
+        margin: 0 auto; /* centre si plus petit que 600px */
+        position: relative; /* pour le loader */
       }
 
       /* Et on force le canvas à remplir son parent */
       #p5-container canvas {
-        display: block; /* virer l’espacement inline-block */
+        width: 100%;
+        height: 100%;
+        display: block;
+        /* virer l’espacement inline-block */
 
         #loader {
           position: absolute;
-          top: 0;
-          left: 0;
-          width: 100vw;
-          height: 100vh;
+          inset: 0;
+          width: 100%;
+          height: 100%;
           background: rgba(255, 255, 255, 0.8);
           display: flex;
           align-items: center;

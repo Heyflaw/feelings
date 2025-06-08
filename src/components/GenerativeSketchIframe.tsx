@@ -16,7 +16,7 @@ export default function GenerativeSketchIframe({
 }: GenerativeSketchIframeProps) {
   const [loading, setLoading] = useState(true);
 
-  // On remet loading à true à chaque regen
+  // Relance le loader à chaque regénération
   useEffect(() => {
     setLoading(true);
   }, [regenerateTrigger]);
@@ -25,17 +25,44 @@ export default function GenerativeSketchIframe({
     <div style={{ position: "relative", width, height }}>
       {loading && (
         <div className="loader-overlay">
-          <div className="loader-grid">
-            {Array.from({ length: 9 }).map((_, i) => (
-              <div
-                key={i}
-                className="loader-dot"
-                style={{
-                  animationDelay: `${(i % 3) * 0.2 + Math.floor(i / 3) * 0.1}s`,
-                }}
-              />
-            ))}
-          </div>
+          <svg width="60" height="20" viewBox="0 0 120 30">
+            <circle cx="30" cy="15" r="10" fill="#616161">
+              <animate
+                attributeName="cy"
+                from="15"
+                to="15"
+                dur="0.6s"
+                begin="0s"
+                repeatCount="indefinite"
+                values="15;5;15"
+                keyTimes="0;0.5;1"
+              ></animate>
+            </circle>
+            <circle cx="60" cy="15" r="10" fill="#616161">
+              <animate
+                attributeName="cy"
+                from="15"
+                to="15"
+                dur="0.6s"
+                begin="0.2s"
+                repeatCount="indefinite"
+                values="15;5;15"
+                keyTimes="0;0.5;1"
+              ></animate>
+            </circle>
+            <circle cx="90" cy="15" r="10" fill="#616161">
+              <animate
+                attributeName="cy"
+                from="15"
+                to="15"
+                dur="0.6s"
+                begin="0.4s"
+                repeatCount="indefinite"
+                values="15;5;15"
+                keyTimes="0;0.5;1"
+              ></animate>
+            </circle>
+          </svg>
         </div>
       )}
       <iframe
@@ -54,33 +81,11 @@ export default function GenerativeSketchIframe({
         .loader-overlay {
           position: absolute;
           inset: 0;
-          background: rgb(244, 245, 239);
+          background: var(--color-bg);
           display: flex;
           align-items: center;
           justify-content: center;
           z-index: 10;
-        }
-        .loader-grid {
-          display: grid;
-          grid-template-columns: repeat(3, 25px);
-          grid-gap: 8px;
-        }
-        .loader-dot {
-          width: 25px;
-          height: 25px;
-          background: #000;
-          border-radius: 50%;
-          opacity: 0.2;
-          animation: fade 1s ease-in-out infinite;
-        }
-        @keyframes fade {
-          0%,
-          100% {
-            opacity: 1;
-          }
-          50% {
-            opacity: 0.2;
-          }
         }
       `}</style>
     </div>

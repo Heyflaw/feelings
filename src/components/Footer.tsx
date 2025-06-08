@@ -7,7 +7,7 @@ export default function Footer() {
     <footer className={styles.footerContainer}>
       <div className={styles.left}>
         <div className={styles.top}>
-          <span>Coming soon on </span>
+          <span>Coming on </span>
           <img
             src="/abstract.svg"
             alt="Abstract Logo"
@@ -15,7 +15,7 @@ export default function Footer() {
           />
         </div>
         <div className={styles.bottom}>
-          <span>Dropping with</span>
+          <span>Drop with</span>
           <img
             src="/logo-long.svg"
             alt="Abstract Logo"

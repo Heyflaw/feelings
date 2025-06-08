@@ -1,238 +1,300 @@
-/* ================================
-   STRUCTURE & STYLES PRINCIPAUX
-   ================================ */
+/* ======================================
+   RESET & VARIABLES (vars.css importé via layout.tsx)
+   ====================================== */
 
-/* Conteneur principal */
+/* ======================================
+   MAIN & HERO
+   ====================================== */
+
 .desktop-1 {
   background: var(--color-bg);
   display: flex;
   flex-direction: column;
-  align-items: center;
-  overflow: hidden;
+  align-items: center; /* centre horizontalement .content */
   margin-bottom: 60px;
 }
 
-/* FEELINGS (titre) */
 .hero__header {
-  width: 100vw;
+  width: 100%;
+  height: auto !important;
   display: flex;
   justify-content: center;
   align-items: flex-start;
-  height: 296px;
-  flex-shrink: 0;
-  margin-bottom: 40px; /* <-- espace supplémentaire */
+  padding-top: 0;
+  margin-bottom: 40px;
 }
+
 .hero__title {
   width: 100%;
-  color: var(--color-black);
+  height: auto !important;
   text-align: center;
-  font-family: var(--font-heading);
-  font-size: 291px;
   line-height: 1;
-  letter-spacing: 0.02em;
+  font-family: var(--font-heading);
+  font-size: clamp(72px, 12vw, 800px); /* titre généreux */
   font-weight: 600;
   text-transform: uppercase;
-  display: flex;
-  align-items: center;
-  justify-content: center;
 }
 
-/* HERO (deux colonnes) */
+/* ======================================
+     CONTENT: GRID 2×2
+     ====================================== */
+
 .content {
+  display: grid;
+  grid-template-columns: 350px 600px; /* deux colonnes égales */
+  grid-template-rows: auto auto; /* deux rangées auto */
+  grid-template-areas:
+    "intro  sketch"
+    "wl     sketch"; /* sketch s’étend sur 2 rangées */
+  gap: 40px;
+
   width: 100%;
   max-width: var(--container-max);
-  display: flex;
+  margin: 0 auto; /* centre le bloc */
   justify-content: center;
-  padding: 0 178px;
-  gap: 40px;
-}
-.left-content {
-  display: flex;
-  flex-direction: column; /* si tu veux garder l’empilement vertical */
-  gap: 40px;
-  align-items: flex-start;
-  margin-right: 40px;
+  align-items: start; /* aligne tout en haut */
 }
 
-/* Colonne gauche, haut */
-.hero__content {
-  display: flex;
-  flex-direction: column;
-  gap: 19px;
-  align-items: flex-start;
+/* attribution des zones */
+.intro-section {
+  grid-area: intro;
 }
-.intro-text {
+.wl-section {
+  grid-area: wl;
+}
+.sketch-section {
+  grid-area: sketch;
+  /* force l’extension du sketch sur les 2 rangées */
+  grid-row: 1 / span 2;
+  width: 100%;
+  height: 100%;
+  position: relative; /* pour loader-overlay */
+  aspect-ratio: 1 / 1;
+  max-width: 600px;
+  margin: 0 auto;
+}
+
+/* ======================================
+     COLONNE GAUCHE (intro + générer + join)
+     ====================================== */
+
+.intro-section,
+.wl-section {
   display: flex;
   flex-direction: column;
-  align-items: flex-start;
   gap: 10px;
-  position: relative;
-  margin-bottom: 30px;
-}
-.text-feeling {
-  font-family: var(--font-base);
-  font-size: 18px;
-  line-height: 1.1;
-  letter-spacing: -0.025em;
-  color: var(--color-text);
-  position: relative;
-  width: 343px;
+  width: 100%;
+  min-width: 0; /* empêche overflow */
 }
 
+/* — Intro — */
 .intro-titre {
   font-family: var(--font-base);
   font-size: 30px;
-  line-height: 1.1;
-  letter-spacing: -0.025em;
+  line-height: 1.2;
   color: var(--color-text);
-  position: static !important;
-  left: 0;
-  top: 0;
-  width: 343px;
+}
+
+.text-feeling {
+  font-family: var(--font-base);
+  font-size: 18px;
+  line-height: 1.4;
+  color: var(--color-text);
+}
+
+.mint-info {
+  font-size: 16px;
+  margin: 8px 0;
+}
+.mint-info p {
+  margin: 4px 0;
+}
+
+/* bouton GENERATE plein width */
+.button.generate-btn {
+  background: var(--color-black);
+  color: #fff;
+  font-family: var(--font-heading);
+  font-size: 12px;
+  text-transform: uppercase;
+  padding: 10px 16px;
+  border-radius: var(--btn-radius);
+  cursor: pointer;
+  width: 100%;
+  max-width: 150px;
+  justify-content: center;
+  transition: transform 0.2s ease;
+  width: auto !important; /* ne pas étirer à 100% */
+  flex: 0 0 auto; /* si jamais dans un flex container */
+
+  justify-content: center; /* centrer icône + texte */
+  align-items: center; /* centrer verticalement */
+  text-align: center;
+}
+.button.generate-btn:hover {
+  transform: scale(1.05);
+}
+
+/* — Join list — */
+.wl-header {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
 }
 
 .wl-titre {
   font-family: var(--font-base);
   font-size: 30px;
-  line-height: 1.1;
-  letter-spacing: -0.025em;
+  line-height: 1.2;
   color: var(--color-text);
-  position: static !important;
-  left: 0;
-  top: 0;
-  width: 343px;
 }
 
-.mint-info {
-  margin: 5px 0;
+.wl-text {
   font-family: var(--font-base);
-  font-size: 16px;
+  font-size: 18px;
   line-height: 1.4;
   color: var(--color-text);
 }
 
-.mint-info p {
-  margin: 4px 0;
-}
-
-/* Boutons */
+/* boutons CONNECT / DISCONNECT */
 .button {
-  background: var(--color-black);
-  border-radius: var(--btn-radius);
-  padding: 10px 16px;
   display: flex;
-  cursor: pointer;
-  color: #fff;
   align-items: center;
   gap: 8px;
-  align-self: flex-start;
-  width: auto;
-  border: 1px solid transparent;
-  transition: background-color 0.2s ease, border-color 0.2s ease,
-    transform 0.2s ease;
+  background: var(--color-black);
+  color: #fff;
+  padding: 10px 16px;
+  width: auto !important;
+  justify-content: center;
+  border-radius: var(--btn-radius);
+  cursor: pointer;
+  transition: background-color 0.2s ease, transform 0.2s ease;
 }
 .button__icon {
   width: 16px;
   height: 16px;
   fill: currentColor;
-  transition: color 0.2s ease;
-}
-.generate-btn {
-  font-family: var(--font-heading);
-  font-size: 12px;
-  font-weight: 500;
-  letter-spacing: 0.02em;
-  color: #fff;
-  text-transform: uppercase;
-  transition: color 0.2s ease;
 }
 .wl-btn {
   font-family: var(--font-heading);
   font-size: 12px;
-  font-weight: 500;
-  letter-spacing: 0.02em;
-  color: #fff;
   text-transform: uppercase;
-  transition: color 0.2s ease;
 }
-
-/* Hover state */
 .button:hover {
   background: #fff;
-  border-color: var(--color-black);
+  color: var(--color-black);
   transform: scale(1.05);
 }
-.button:hover .wl-btn,
-.button:hover .generate-btn,
-.button:hover .button__icon {
-  color: var(--color-black);
+.button.disabled {
+  opacity: 0.5;
+  pointer-events: none;
 }
 
-/* Colonne gauche, bas */
-.wl-content {
-  display: flex;
-  flex-direction: column;
-  gap: 19px;
-  align-items: flex-start;
+/* message “liste pleine” */
+.full-message {
+  font-size: 0.875rem;
+  color: #555;
+  word-break: break-word;
+}
+.full-message a {
+  text-decoration: underline;
 }
 
-.frame-10 {
-  display: flex;
-  flex-direction: column;
-  align-items: flex-start;
-  gap: 10px;
-  position: relative;
-  margin-bottom: 20px;
-}
-.wl-text {
-  font-family: var(--font-base);
-  font-size: 18px;
-  line-height: 1.1;
-  letter-spacing: -0.025em;
-  color: var(--color-text);
-  position: relative;
-  width: 343px;
-}
+/* ======================================
+     COLONNE DROITE (Sketch / Iframe)
+     ====================================== */
 
-/* Visuel (rectangle rose + p5.js) */
-.right-content {
-  display: flex;
-  justify-content: flex-end;
-  width: 600px;
-  height: 600px;
-}
-.rectangle-1 {
-  border-radius: var(--shape-radius);
-  width: 600px;
-  height: 600px;
-  position: relative;
-  overflow: hidden;
-}
-#p5-container {
-  width: 600px;
-  height: 600px;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-}
-
-#p5-container canvas {
+.sketch-section > div,
+.sketch-section iframe {
+  width: 100%;
+  aspect-ratio: 1 / 1; /* force un carré */
+  height: auto; /* laisse l’aspect-ratio piloter */
   display: block;
 }
 
-/* Réduire la taille du texte pour le statut de connexion */
+/* ======================================
+     PROGRESSION & STATUT
+     ====================================== */
+
+.progress-wrapper {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  width: 100%;
+  max-width: 240px;
+}
+.progress {
+  background: rgba(0, 0, 0, 0.1);
+  border-radius: 100px;
+  height: 24px;
+  padding: 0 5px;
+  display: flex;
+  align-items: center;
+}
+.progress-value {
+  background: #000;
+  height: 16px;
+  border-radius: 100px;
+  transition: width 0.3s ease;
+}
+.progress-text {
+  font-size: 0.875rem;
+  color: var(--color-text);
+}
 .connection-status {
-  white-space: pre-wrap;
-  font-size: 0.75rem; /* ou 0.875rem selon tes préférences */
-  line-height: 1.2; /* pour garder une bonne lisibilité */
-  color: var(--success-color, #000000);
-  margin-top: 0.5rem; /* espace juste en-dessous du bouton */
-  word-break: break-all; /* pour couper l’adresse si elle est trop longue */
-  max-width: 100%; /* évite de forcer le conteneur à s’agrandir */
+  font-size: 0.875rem;
+  margin-top: 8px;
+  word-break: break-all;
 }
 
-/* Si tu veux cibler spécifiquement l’adresse sans toucher le reste */
-.connection-status .address {
-  font-size: 0.75rem;
-  font-weight: 400;
+/* ======================================
+     MEDIA QUERY MOBILE (<768px)
+     ====================================== */
+
+@media (max-width: 768px) {
+  .content {
+    display: flex;
+    flex-direction: column;
+    gap: 24px;
+    padding: 0 16px;
+  }
+
+  /* bouton GENERATE plein width */
+  .button.generate-btn {
+    width: 100%;
+    max-width: 100%;
+  }
+
+  .intro-section,
+  .sketch-section > div,
+  .sketch-section iframe {
+    width: 100%;
+    height: 100%;
+    display: block;
+  }
+  .sketch-section {
+    width: 100%;
+    height: auto;
+  }
+
+  .wl-section {
+    width: 100%;
+  }
+  /* progression & statut */
+  .progress-wrapper {
+    width: 100%;
+    max-width: none;
+    gap: 12px;
+  }
+  .progress {
+    height: 32px;
+    padding: 0 8px;
+  }
+  .progress-value {
+    height: 24px;
+  }
+  .progress-text,
+  .connection-status {
+    font-size: 1rem;
+  }
 }

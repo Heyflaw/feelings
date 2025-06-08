@@ -1,6 +1,6 @@
 // By Heyflaw
-// Rubber's Theory 2025
-// V1.13 - Arcs fluides avec p5.brush sans curveVertex
+// Feelings 2025
+// V1.1
 // P5.Brush library by Alejandro Campos Uribe
 
 /***********************************
@@ -110,6 +110,49 @@ const globalConfig = {
     hatchAngle: 45,
   },
 };
+
+const BASE_CANVAS_SIZE = globalConfig.general.canvasWidth; // 600
+const BASE_MARGIN_RATIO = globalConfig.general.margin / BASE_CANVAS_SIZE; // 50/600 ≈ 0.0833
+
+function handleResizeAndDraw() {
+  const cont = document.getElementById("p5-container");
+  const size = cont ? cont.offsetWidth : globalConfig.general.canvasWidth;
+  const ratio = size / BASE_CANVAS_SIZE;
+  globalConfig.general.margin = size * BASE_MARGIN_RATIO;
+
+  console.log(
+    `⚙️ resize – Canvas size: ${size}×${size}, ratio: ${ratio.toFixed(3)}`
+  );
+
+  resizeCanvas(size, size);
+  gridSize =
+    (width - 2 * globalConfig.general.margin) / globalConfig.general.numCols;
+
+  layers.forEach((layer) => {
+    if (layer.config.usedCircles.hatchEnabled) {
+      layer.config.usedCircles.hatchDistance =
+        layer.config.usedCircles.baseHatchDistance * ratio;
+      layer.config.usedCircles.hatchRand =
+        layer.config.usedCircles.baseHatchRand * ratio;
+    }
+    if (layer.config.path.hatchEnabled) {
+      layer.config.path.hatchDistance =
+        layer.config.path.baseHatchDistance * ratio;
+      layer.config.path.hatchRand = layer.config.path.baseHatchRand * ratio;
+    }
+    // scale stroke weights
+    layer.config.usedCircles.strokeWeight =
+      layer.config.usedCircles.baseStrokeWeight * ratio;
+    layer.config.path.strokeWeight = layer.config.path.baseStrokeWeight * ratio;
+  });
+
+  globalConfig.unusedCircles.strokeWeight =
+    globalConfig.unusedCircles.baseStrokeWeight * ratio;
+
+  background("rgb(244,245,239)");
+  drawGrid();
+  drawAllLayers();
+}
 
 /***********************************
  * CONFIGURATION DES COUCHES
@@ -303,18 +346,41 @@ function drawBrushCircle(
 }
 
 function setup() {
+  pixelDensity(2);
   // 1) on crée le canvas et on le récupère
-  const cnv = createCanvas(
-    globalConfig.general.canvasWidth,
-    globalConfig.general.canvasHeight,
-    WEBGL
-  );
+  //const cnv = createCanvas(
+  //globalConfig.general.canvasWidth,
+  //globalConfig.general.canvasHeight,
+  //WEBGL
+  //);
   // 2) on l’attache à NOTRE div dedans l’iframe
+  //cnv.parent("p5-container");
+
+  // 1) mesure la taille réelle du conteneur
+  const cont = document.getElementById("p5-container");
+  const size = cont ? cont.offsetWidth : globalConfig.general.canvasWidth;
+  // compute scaling ratio for hatch distance and randomness
+  const ratio = size / BASE_CANVAS_SIZE;
+
+  console.log(
+    `⚙️ setup – Canvas size: ${size}×${size}, ratio: ${ratio.toFixed(3)}`
+  );
+
+  // 3) recalcule la marge proportionnellement
+  globalConfig.general.margin = size * BASE_MARGIN_RATIO;
+
+  // 2) crée un canvas carré de cette taille
+  const cnv = createCanvas(size, size, WEBGL);
   cnv.parent("p5-container");
+
+  gridSize =
+    (width - 2 * globalConfig.general.margin) / globalConfig.general.numCols;
 
   // 3) ensuite le reste
   background("rgb(244,245,239)");
   brush.load();
+
+  handleResizeAndDraw();
 
   // … tout ton code de génération …
 
@@ -433,7 +499,9 @@ function setup() {
         layer.usedCircles.hatchBrush ||
         strokeStyles[floor(random(strokeStyles.length))].name;
       layer.usedCircles.hatchRand = random(0, 0.3);
+      layer.usedCircles.baseHatchRand = layer.usedCircles.hatchRand;
       layer.usedCircles.hatchDistance = random(1, 8);
+      layer.usedCircles.baseHatchDistance = layer.usedCircles.hatchDistance;
     }
     layer.usedCircles.hatchAngle = random(0, 180);
 
@@ -446,7 +514,9 @@ function setup() {
         layer.path.hatchBrush ||
         strokeStyles[floor(random(strokeStyles.length))].name;
       layer.path.hatchRand = random(0, 0.3);
+      layer.path.baseHatchRand = layer.path.hatchRand;
       layer.path.hatchDistance = random(1, 6);
+      layer.path.baseHatchDistance = layer.path.hatchDistance;
     }
     layer.path.hatchAngle = random(0, 180);
   }
@@ -620,11 +690,11 @@ function findValidPathForLayer(layer) {
     let toIndex = (i + 1) % layer.config.circles.numCircles;
     let c1 = layer.circles[fromIndex];
     let c2 = layer.circles[toIndex];
-    let tangents = getTangents(
-      c1,
-      c2,
-      gridSize * globalConfig.general.circleRadiusRatio
-    );
+    // Ajustement du rayon de cercle pour les tangentes
+    let circleRadius =
+      gridSize * globalConfig.general.circleRadiusRatio -
+      layer.config.usedCircles.strokeWeight / 2;
+    let tangents = getTangents(c1, c2, circleRadius);
 
     let allowedTypes = [];
     if (i === 0) {
@@ -758,9 +828,13 @@ function computeArcForConnection(i, path, layer) {
     (atan2(next.p1.y - circleCenter.y, next.p1.x - circleCenter.x) + TWO_PI) %
     TWO_PI;
   let isCW = current.arcDir === "clockwise";
+  // Ajustement de l'arc pour correspondre au cercle.
+  let arcRadius =
+    gridSize * globalConfig.general.circleRadiusRatio -
+    layer.config.usedCircles.strokeWeight / 2;
   return sampleArc(
     circleCenter,
-    gridSize * globalConfig.general.circleRadiusRatio,
+    arcRadius,
     startAngle,
     endAngle,
     isCW,
@@ -811,7 +885,8 @@ function drawUnusedCircles(config) {
         drawBrushCircle(
           pos.x,
           pos.y,
-          gridSize * globalConfig.general.circleRadiusRatio,
+          gridSize * globalConfig.general.circleRadiusRatio -
+            config.unusedCircles.strokeWeight / 2,
           config.unusedCircles.strokeBrush,
           config.unusedCircles.strokeColor,
           config.unusedCircles.strokeWeight,
@@ -965,4 +1040,7 @@ function isPermutationValid(perm, originalCircles) {
   }
   return true;
 }
+
+windowResized = handleResizeAndDraw;
+
 new p5();

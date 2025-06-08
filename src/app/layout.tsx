@@ -1,4 +1,3 @@
-// src/app/layout.tsx
 import "./globals.css";
 import "./styles/vars.css";
 import "./styles/style.css";
@@ -14,12 +13,10 @@ const geistMono = Geist_Mono({
   variable: "--font-geist-mono",
   subsets: ["latin"],
 });
-
 const avenueMono = localFont({
   src: "../fonts/Avenue Mono.ttf",
   variable: "--font-avenue-mono",
 });
-
 const roobert = localFont({
   src: [
     { path: "../fonts/Roobert-Light.ttf", weight: "300" },
@@ -29,8 +26,8 @@ const roobert = localFont({
 });
 
 export const metadata: Metadata = {
-  title: "Ma Collection d’Art Génératif",
-  description: "Feelings – A story of resilience",
+  title: "Feelings - A story of resilience",
+  description: "Feelings – Generative art",
 };
 
 export default function RootLayout({
@@ -40,7 +37,9 @@ export default function RootLayout({
 }) {
   return (
     <html lang="fr">
-      <head />
+      <head>
+        <meta name="viewport" content="width=device-width, initial-scale=1" />
+      </head>
       <body
         className={`
           ${geistSans.variable} ${geistMono.variable}
@@ -49,8 +48,7 @@ export default function RootLayout({
         `}
       >
         <NextAbstractWalletProvider>
-          {/* C’est ici que React va injecter tes pages */}
-          <main className="flex-grow-0">{children}</main>
+          <main className="flex-grow">{children}</main>
           <Footer />
         </NextAbstractWalletProvider>
       </body>
