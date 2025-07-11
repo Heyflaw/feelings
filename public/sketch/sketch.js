@@ -392,9 +392,9 @@ function initLayers() {
       pSWmaxScaled = 3;
       break;
     case "charcoal":
-      cSWmin = 0.8;
+      cSWmin = 0.5;
       cSWmax = 1.2;
-      pSWmin = 0.8;
+      pSWmin = 0.5;
       pSWmax = 1.2;
       cSWminScaled = 0.8;
       cSWmaxScaled = 1.5;
@@ -480,13 +480,13 @@ function initLayers() {
   for (let i = 0; i < numActiveLayers; i++) {
     let cfg = layerConfigs[i];
     if (numActiveLayers === 1) {
-      cfg.circles.numCircles = floor(random(7, 10));
+      cfg.circles.numCircles = floor(random(6, 10));
     } else if (numActiveLayers === 2) {
       let idx8 = floor(random(2));
       cfg.circles.numCircles = i === idx8 ? 8 : floor(random(5, 9));
     } else {
       let idx8 = floor(random(3));
-      cfg.circles.numCircles = i === idx8 ? 8 : floor(random(5, 9));
+      cfg.circles.numCircles = i === idx8 ? 8 : floor(random(5, 7));
     }
 
     cfg.usedCircles.strokeBrush = selectedBrush;

@@ -10,6 +10,16 @@ const GenerativeSketchIframe = dynamic(
   { ssr: false }
 );
 
+// Fonction pour échapper les caractères HTML
+function escapeHtml(unsafe: string): string {
+  return unsafe
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#039;");
+}
+
 export default function HomePage() {
   const MAX_WALLETS = 100;
   const [regenerateTrigger, setRegenerateTrigger] = useState(0);
@@ -56,15 +66,15 @@ export default function HomePage() {
         .then(async (res) => {
           const data = await res.json();
           if (res.ok) {
-            setMessage(`✅ ${data.message}`);
+            setMessage(`✅ ${escapeHtml(data.message)}`);
             setJoined(true);
             setCount(data.total);
           } else if (res.status === 409) {
-            setMessage(`⚠️ ${data.message}`);
+            setMessage(`⚠️ ${escapeHtml(data.message)}`);
             setJoined(true);
             setCount(data.total);
           } else {
-            setMessage(`❌ ${data.message}`);
+            setMessage(`❌ ${escapeHtml(data.message)}`);
           }
         })
         .catch(() => setMessage("❌ Network error."))
@@ -99,7 +109,7 @@ export default function HomePage() {
             Born from a tough year, <b>Feelings</b> is a generative art project
             coded in p5.js. It’s about bringing emotions, both the good and the
             bad, to life, transforming them into something visible. Hit
-            "Generate" to discover a new one.
+            &quot;Generate&quot; to discover a new one.
           </p>
           <div className="mint-info">
             <p>

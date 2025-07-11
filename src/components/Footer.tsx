@@ -1,5 +1,5 @@
-// src/components/Footer.tsx
 import React from "react";
+import Image from "next/image"; // Import du composant Image
 import styles from "./Footer.module.css";
 
 export default function Footer() {
@@ -8,18 +8,22 @@ export default function Footer() {
       <div className={styles.left}>
         <div className={styles.top}>
           <span>Coming on </span>
-          <img
+          <Image
             src="/abstract.svg"
             alt="Abstract Logo"
             className={styles.logoAbstract}
+            width={100} // Ajustez selon les dimensions réelles
+            height={50} // Ajustez selon les dimensions réelles
           />
         </div>
         <div className={styles.bottom}>
           <span>Drop with</span>
-          <img
+          <Image
             src="/logo-long.svg"
             alt="Abstract Logo"
             className={styles.logoHighlight}
+            width={150} // Ajustez selon les dimensions réelles
+            height={30} // Ajustez selon les dimensions réelles
           />
         </div>
       </div>
@@ -30,7 +34,9 @@ export default function Footer() {
           rel="noopener noreferrer"
           className={styles.link}
         >
-          Generative art collection<br></br>By @Heyflaw ✌🏻
+          Generative art collection
+          <br />
+          By @Heyflaw ✌🏻
         </a>
       </div>
     </footer>
