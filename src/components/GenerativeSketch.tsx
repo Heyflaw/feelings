@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 "use client";
 import React, { useEffect, useRef } from "react";
 
@@ -5,15 +6,11 @@ interface GenerativeSketchProps {
   regenerateTrigger: number;
 }
 
-interface WindowWithSketch extends Window {
-  createSketch?: (containerId: string) => p5; // Utiliser le type global p5
-}
-
 export default function GenerativeSketch({
   regenerateTrigger,
 }: GenerativeSketchProps) {
   const containerRef = useRef<HTMLDivElement>(null);
-  const instanceRef = useRef<p5 | null>(null); // Utiliser le type global p5
+  const instanceRef = useRef<any>(null); // Utiliser any temporairement
 
   const initSketch = () => {
     // Supprime l’ancienne instance (canvas + listeners)
@@ -26,8 +23,7 @@ export default function GenerativeSketch({
       containerRef.current.innerHTML = "";
     }
     // Instancie le sketch
-    const windowWithSketch = window as unknown as WindowWithSketch;
-    const factory = windowWithSketch.createSketch;
+    const factory = (window as any).createSketch; // Utiliser any temporairement
     if (typeof factory === "function") {
       instanceRef.current = factory("p5-container");
     } else {
