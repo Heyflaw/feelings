@@ -117,11 +117,10 @@
   font-family: var(--font-heading);
   font-size: 12px;
   text-transform: uppercase;
-  padding: 10px 16px;
   border-radius: var(--btn-radius);
   cursor: pointer;
-  width: 100%;
-  max-width: 150px;
+  padding: 10px 16px;
+  max-width: 100px;
   justify-content: center;
   transition: transform 0.2s ease;
   width: auto !important; /* ne pas étirer à 100% */
@@ -164,11 +163,13 @@
   background: var(--color-black);
   color: #fff;
   padding: 10px 16px;
+  max-width: 225px;
   width: auto !important;
   justify-content: center;
   border-radius: var(--btn-radius);
   cursor: pointer;
   transition: background-color 0.2s ease, transform 0.2s ease;
+  flex: 0 0 auto; /* si jamais dans un flex container */
 }
 .button__icon {
   width: 16px;
@@ -221,7 +222,7 @@
   flex-direction: column;
   gap: 8px;
   width: 100%;
-  max-width: 240px;
+  max-width: 225px;
 }
 .progress {
   background: rgba(0, 0, 0, 0.1);
@@ -261,6 +262,12 @@
 
   /* bouton GENERATE plein width */
   .button.generate-btn {
+    width: 100%;
+    max-width: 100%;
+  }
+
+  /* bouton GENERATE plein width */
+  .button {
     width: 100%;
     max-width: 100%;
   }

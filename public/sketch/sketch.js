@@ -1,21 +1,18 @@
 // By Heyflaw
 // Feelings 2025
-// V1.1
+// V1.2 refactored: scaling at init and regenerate on resize
 // P5.Brush library by Alejandro Campos Uribe
 
 /***********************************
  * CONFIGURATION DES STYLES DE TRAITS
  ***********************************/
 const strokeStyles = [
-  { name: "pen", probability: 15 },
+  //{ name: "pen", probability: 15 },
   { name: "charcoal", probability: 15 },
-  { name: "2B", probability: 10 },
-  { name: "HB", probability: 10 },
-  { name: "2H", probability: 10 }, // Crayon dur, trait fin
-  { name: "cpencil", probability: 10 }, // Crayon de couleur
-  { name: "rotring", probability: 10 }, // Stylo technique, trait précis
-  { name: "marker", probability: 10 }, // Marqueur
-  //{ name: "marker2", probability: 10 }  // Variante de marqueur
+  //{ name: "2B", probability: 10 },
+  //{ name: "HB", probability: 10 },
+  //{ name: "2H", probability: 10 },
+  { name: "marker", probability: 10 },
 ];
 
 /***********************************
@@ -114,44 +111,153 @@ const globalConfig = {
 const BASE_CANVAS_SIZE = globalConfig.general.canvasWidth; // 600
 const BASE_MARGIN_RATIO = globalConfig.general.margin / BASE_CANVAS_SIZE; // 50/600 ≈ 0.0833
 
-function handleResizeAndDraw() {
-  const cont = document.getElementById("p5-container");
-  const size = cont ? cont.offsetWidth : globalConfig.general.canvasWidth;
-  const ratio = size / BASE_CANVAS_SIZE;
-  globalConfig.general.margin = size * BASE_MARGIN_RATIO;
+/***********************************
+ * VARIABLES GLOBALES
+ ***********************************/
+let gridSize;
+let layers = [];
+let selectedBrush;
+let selectedPalette;
+let numActiveLayers;
 
-  console.log(
-    `⚙️ resize – Canvas size: ${size}×${size}, ratio: ${ratio.toFixed(3)}`
+/***********************************
+ * FONCTIONS UTILITAIRES
+ ***********************************/
+function scaleParameter(baseValue, ratio, factor = 0.3) {
+  return baseValue * (1 - factor + factor * ratio);
+}
+
+function constrainStrokeWeight(weight, minWeight, maxWeight) {
+  return constrain(weight, minWeight, maxWeight);
+}
+
+function constrainHatchDistance(distance, minDistance, maxDistance) {
+  return constrain(distance, minDistance, maxDistance);
+}
+
+function constrainHatchRand(rand, minRand, maxRand) {
+  return constrain(rand, minRand, maxRand);
+}
+
+function selectBasedOnProbability(options) {
+  let totalProbability = options.reduce(
+    (acc, option) => acc + option.probability,
+    0
   );
+  let randomNum = random(totalProbability);
+  let cumulativeProbability = 0;
+  for (let option of options) {
+    cumulativeProbability += option.probability;
+    if (randomNum <= cumulativeProbability) return option.name;
+  }
+  return options[0].name;
+}
 
-  resizeCanvas(size, size);
-  gridSize =
-    (width - 2 * globalConfig.general.margin) / globalConfig.general.numCols;
+function selectPalette(options) {
+  let totalProbability = options.reduce(
+    (acc, option) => acc + option.probability,
+    0
+  );
+  let randomNum = random(totalProbability);
+  let cumulativeProbability = 0;
+  for (let option of options) {
+    cumulativeProbability += option.probability;
+    if (randomNum <= cumulativeProbability) return option;
+  }
+  return options[0];
+}
 
-  layers.forEach((layer) => {
-    if (layer.config.usedCircles.hatchEnabled) {
-      layer.config.usedCircles.hatchDistance =
-        layer.config.usedCircles.baseHatchDistance * ratio;
-      layer.config.usedCircles.hatchRand =
-        layer.config.usedCircles.baseHatchRand * ratio;
+function selectNumLayers(options) {
+  let totalProbability = options.reduce(
+    (acc, option) => acc + option.probability,
+    0
+  );
+  let randomNum = random(totalProbability);
+  let cumulativeProbability = 0;
+  for (let option of options) {
+    cumulativeProbability += option.probability;
+    if (randomNum <= cumulativeProbability) return option.numLayers;
+  }
+  return options[0].numLayers;
+}
+
+function toWebGLCoords(x, y) {
+  return { x: x - width / 2, y: -y + height / 2 };
+}
+
+function pointLineDistance(pt, v, w) {
+  let l2 = sq(w.x - v.x) + sq(w.y - v.y);
+  if (l2 === 0) return dist(pt.x, pt.y, v.x, v.y);
+  let t = max(
+    0,
+    min(1, ((pt.x - v.x) * (w.x - v.x) + (pt.y - v.y) * (w.y - v.y)) / l2)
+  );
+  return dist(pt.x, pt.y, v.x + t * (w.x - v.x), v.y + t * (w.y - v.y));
+}
+
+function drawBrushCircle(
+  x,
+  y,
+  radius,
+  strokeBrush,
+  strokeColor,
+  strokeWeight,
+  hatchEnabled,
+  hatchBrush,
+  hatchDistance,
+  hatchRand,
+  hatchAngle
+) {
+  brush.noHatch();
+  brush.noFill();
+  brush.set(strokeBrush, strokeColor, strokeWeight);
+  brush.circle(x, y, radius);
+  if (hatchEnabled && hatchBrush && hatchDistance && hatchAngle) {
+    brush.setHatch(hatchBrush, strokeColor);
+    brush.hatch(hatchDistance, hatchAngle, {
+      brush: hatchBrush,
+      rand: hatchRand,
+    });
+    brush.noFill();
+    brush.circle(x, y, radius);
+  }
+  brush.reDraw();
+}
+
+function shuffleArray(array) {
+  for (let i = array.length - 1; i > 0; i--) {
+    let j = floor(random() * (i + 1));
+    [array[i], array[j]] = [array[j], array[i]];
+  }
+}
+
+function getAllPermutations(array) {
+  if (array.length <= 1) return [array];
+  let result = [];
+  for (let i = 0; i < array.length; i++) {
+    let current = array[i];
+    let remaining = array.slice(0, i).concat(array.slice(i + 1));
+    let perms = getAllPermutations(remaining);
+    for (let perm of perms) {
+      result.push([current].concat(perm));
     }
-    if (layer.config.path.hatchEnabled) {
-      layer.config.path.hatchDistance =
-        layer.config.path.baseHatchDistance * ratio;
-      layer.config.path.hatchRand = layer.config.path.baseHatchRand * ratio;
-    }
-    // scale stroke weights
-    layer.config.usedCircles.strokeWeight =
-      layer.config.usedCircles.baseStrokeWeight * ratio;
-    layer.config.path.strokeWeight = layer.config.path.baseStrokeWeight * ratio;
-  });
+  }
+  return result;
+}
 
-  globalConfig.unusedCircles.strokeWeight =
-    globalConfig.unusedCircles.baseStrokeWeight * ratio;
-
-  background("rgb(244,245,239)");
-  drawGrid();
-  drawAllLayers();
+function isPermutationValid(perm, originalCircles) {
+  let n = perm.length;
+  for (let i = 0; i < n; i++) {
+    let c1 = originalCircles[perm[i]];
+    let c2 = originalCircles[perm[(i + 1) % n]];
+    let c3 = originalCircles[perm[(i + 2) % n]];
+    if (
+      (abs(c1.y - c2.y) < 1 && abs(c2.y - c3.y) < 1) ||
+      (abs(c1.x - c2.x) < 1 && abs(c2.x - c3.x) < 1)
+    )
+      return false;
+  }
+  return true;
 }
 
 /***********************************
@@ -251,358 +357,256 @@ const layerConfigs = [
 ];
 
 /***********************************
- * VARIABLES GLOBALES
+ * INIT ET SCALING DES LAYERS
  ***********************************/
-let gridSize;
-let layers = [];
-let tangentColors;
-let selectedBrush;
-let selectedPalette;
-let numActiveLayers;
-
-function selectBasedOnProbability(options) {
-  let totalProbability = options.reduce(
-    (acc, option) => acc + option.probability,
-    0
-  );
-  let randomNum = random(totalProbability);
-  let cumulativeProbability = 0;
-  for (let option of options) {
-    cumulativeProbability += option.probability;
-    if (randomNum <= cumulativeProbability) return option.name;
-  }
-  return options[0].name;
-}
-
-function selectPalette(options) {
-  let totalProbability = options.reduce(
-    (acc, option) => acc + option.probability,
-    0
-  );
-  let randomNum = random(totalProbability);
-  let cumulativeProbability = 0;
-  for (let option of options) {
-    cumulativeProbability += option.probability;
-    if (randomNum <= cumulativeProbability) return option;
-  }
-  return options[0];
-}
-
-function selectNumLayers(options) {
-  let totalProbability = options.reduce(
-    (acc, option) => acc + option.probability,
-    0
-  );
-  let randomNum = random(totalProbability);
-  let cumulativeProbability = 0;
-  for (let option of options) {
-    cumulativeProbability += option.probability;
-    if (randomNum <= cumulativeProbability) return option.numLayers;
-  }
-  return options[0].numLayers;
-}
-
-function toWebGLCoords(x, y) {
-  return { x: x - width / 2, y: -y + height / 2 };
-}
-
-function pointLineDistance(pt, v, w) {
-  let l2 = sq(w.x - v.x) + sq(w.y - v.y);
-  if (l2 === 0) return dist(pt.x, pt.y, v.x, v.y);
-  let t = max(
-    0,
-    min(1, ((pt.x - v.x) * (w.x - v.x) + (pt.y - v.y) * (w.y - v.y)) / l2)
-  );
-  return dist(pt.x, pt.y, v.x + t * (w.x - v.x), v.y + t * (w.y - v.y));
-}
-
-function drawBrushCircle(
-  x,
-  y,
-  radius,
-  strokeBrush,
-  strokeColor,
-  strokeWeight,
-  hatchEnabled,
-  hatchBrush,
-  hatchDistance,
-  hatchRand,
-  hatchAngle
-) {
-  brush.noHatch();
-  brush.noFill();
-  brush.set(strokeBrush, strokeColor, strokeWeight);
-  brush.circle(x, y, radius);
-  if (hatchEnabled && hatchBrush && hatchDistance && hatchAngle) {
-    brush.setHatch(hatchBrush, strokeColor);
-    brush.hatch(hatchDistance, hatchAngle, {
-      brush: hatchBrush,
-      rand: hatchRand,
-    });
-    brush.noFill();
-    brush.circle(x, y, radius);
-  }
-  brush.reDraw();
-}
-
-function setup() {
-  pixelDensity(2);
-  // 1) on crée le canvas et on le récupère
-  //const cnv = createCanvas(
-  //globalConfig.general.canvasWidth,
-  //globalConfig.general.canvasHeight,
-  //WEBGL
-  //);
-  // 2) on l’attache à NOTRE div dedans l’iframe
-  //cnv.parent("p5-container");
-
-  // 1) mesure la taille réelle du conteneur
+function initLayers() {
   const cont = document.getElementById("p5-container");
   const size = cont ? cont.offsetWidth : globalConfig.general.canvasWidth;
-  // compute scaling ratio for hatch distance and randomness
   const ratio = size / BASE_CANVAS_SIZE;
-
-  console.log(
-    `⚙️ setup – Canvas size: ${size}×${size}, ratio: ${ratio.toFixed(3)}`
-  );
-
-  // 3) recalcule la marge proportionnellement
   globalConfig.general.margin = size * BASE_MARGIN_RATIO;
-
-  // 2) crée un canvas carré de cette taille
-  const cnv = createCanvas(size, size, WEBGL);
-  cnv.parent("p5-container");
-
   gridSize =
-    (width - 2 * globalConfig.general.margin) / globalConfig.general.numCols;
-
-  // 3) ensuite le reste
-  background("rgb(244,245,239)");
-  brush.load();
-
-  handleResizeAndDraw();
-
-  // … tout ton code de génération …
+    (size - 2 * globalConfig.general.margin) / globalConfig.general.numCols;
 
   numActiveLayers = selectNumLayers(layerOptions);
   selectedBrush = selectBasedOnProbability(strokeStyles);
   selectedPalette = selectPalette(colorPalettes);
 
-  // Définir le nombre de cercles en fonction du nombre de couches
-  if (numActiveLayers === 1) {
-    layerConfigs[0].circles.numCircles = floor(random(7, 10));
-  } else if (numActiveLayers === 2) {
-    let eightCircleLayer = floor(random(2));
-    layerConfigs[eightCircleLayer].circles.numCircles = 8;
-    layerConfigs[1 - eightCircleLayer].circles.numCircles = floor(random(5, 9));
-  } else if (numActiveLayers === 3) {
-    let eightCircleLayer = floor(random(3));
-    layerConfigs[eightCircleLayer].circles.numCircles = 8;
-    for (let i = 0; i < 3; i++) {
-      if (i !== eightCircleLayer) {
-        layerConfigs[i].circles.numCircles = floor(random(5, 9));
-      }
-    }
-  }
-
-  let circleStrokeWeightMin,
-    circleStrokeWeightMax,
-    pathStrokeWeightMin,
-    pathStrokeWeightMax;
+  // Stroke weight ranges based on brush
+  let cSWmin,
+    cSWmax,
+    pSWmin,
+    pSWmax,
+    cSWminScaled,
+    cSWmaxScaled,
+    pSWminScaled,
+    pSWmaxScaled;
   switch (selectedBrush) {
     case "pen":
-      circleStrokeWeightMin = 1.5;
-      circleStrokeWeightMax = 2.5;
-      pathStrokeWeightMin = 1.5;
-      pathStrokeWeightMax = 2.5;
+      cSWmin = 2;
+      cSWmax = 2.5;
+      pSWmin = 2;
+      pSWmax = 2.5;
+      cSWminScaled = 1.5;
+      cSWmaxScaled = 3;
+      pSWminScaled = 1.5;
+      pSWmaxScaled = 3;
       break;
     case "charcoal":
-      circleStrokeWeightMin = 0.5;
-      circleStrokeWeightMax = 1;
-      pathStrokeWeightMin = 0.5;
-      pathStrokeWeightMax = 1;
+      cSWmin = 0.8;
+      cSWmax = 1.2;
+      pSWmin = 0.8;
+      pSWmax = 1.2;
+      cSWminScaled = 0.8;
+      cSWmaxScaled = 1.5;
+      pSWminScaled = 0.8;
+      pSWmaxScaled = 1.5;
       break;
     case "2B":
-      circleStrokeWeightMin = 1;
-      circleStrokeWeightMax = 2;
-      pathStrokeWeightMin = 1;
-      pathStrokeWeightMax = 2;
+      cSWmin = 1.5;
+      cSWmax = 2;
+      pSWmin = 1.5;
+      pSWmax = 2;
+      cSWminScaled = 1;
+      cSWmaxScaled = 2.5;
+      pSWminScaled = 1;
+      pSWmaxScaled = 2.5;
       break;
     case "HB":
-      circleStrokeWeightMin = 1;
-      circleStrokeWeightMax = 2;
-      pathStrokeWeightMin = 1;
-      pathStrokeWeightMax = 2;
+      cSWmin = 1.5;
+      cSWmax = 2;
+      pSWmin = 1.5;
+      pSWmax = 2;
+      cSWminScaled = 1;
+      cSWmaxScaled = 2.5;
+      pSWminScaled = 1;
+      pSWmaxScaled = 2.5;
       break;
     case "2H":
-      circleStrokeWeightMin = 1;
-      circleStrokeWeightMax = 2.5;
-      pathStrokeWeightMin = 1;
-      pathStrokeWeightMax = 2.5;
-      break;
-    case "cpencil":
-      circleStrokeWeightMin = 1;
-      circleStrokeWeightMax = 2;
-      pathStrokeWeightMin = 1;
-      pathStrokeWeightMax = 2;
-      break;
-    case "rotring":
-      circleStrokeWeightMin = 1;
-      circleStrokeWeightMax = 3;
-      pathStrokeWeightMin = 1;
-      pathStrokeWeightMax = 3;
+      cSWmin = 1.5;
+      cSWmax = 2.5;
+      pSWmin = 1.5;
+      pSWmax = 2.5;
+      cSWminScaled = 1;
+      cSWmaxScaled = 3;
+      pSWminScaled = 1;
+      pSWmaxScaled = 3;
       break;
     case "marker":
-      circleStrokeWeightMin = 0.5;
-      circleStrokeWeightMax = 1;
-      pathStrokeWeightMin = 0.5;
-      pathStrokeWeightMax = 1;
-      break;
-    case "marker2":
-      circleStrokeWeightMin = 0.5;
-      circleStrokeWeightMax = 1;
-      pathStrokeWeightMin = 0.5;
-      pathStrokeWeightMax = 1;
+      cSWmin = 0.5;
+      cSWmax = 1;
+      pSWmin = 0.5;
+      pSWmax = 1;
+      cSWminScaled = 0.5;
+      cSWmaxScaled = 1.5;
+      pSWminScaled = 0.5;
+      pSWmaxScaled = 1.5;
       break;
     default:
-      circleStrokeWeightMin = 0.5;
-      circleStrokeWeightMax = 1.5;
-      pathStrokeWeightMin = 0.3;
-      pathStrokeWeightMax = 1;
+      cSWmin = 0.5;
+      cSWmax = 1.5;
+      pSWmin = 0.3;
+      pSWmax = 1;
+      cSWminScaled = 0.5;
+      cSWmaxScaled = 2;
+      pSWminScaled = 0.5;
+      pSWmaxScaled = 2;
   }
 
-  // Condition spéciale : si une seule couche et brush dans {pen, HB, 2B, 2H, cpencil}, épaisseur minimale de 2
-  const thickBrushes = ["pen", "HB", "2B", "2H", "cpencil"];
-  if (numActiveLayers === 1 && thickBrushes.includes(selectedBrush)) {
-    circleStrokeWeightMin = 2;
-    circleStrokeWeightMax = Math.max(circleStrokeWeightMax, 2.5); // Assurer que max >= 2
-    pathStrokeWeightMin = 2;
-    pathStrokeWeightMax = Math.max(pathStrokeWeightMax, 2.5); // Assurer que max >= 2
+  if (
+    numActiveLayers === 1 &&
+    ["pen", "HB", "2B", "2H"].includes(selectedBrush)
+  ) {
+    cSWmin = 2;
+    cSWmax = 2.5;
+    pSWmin = 2;
+    pSWmax = 2.5;
+    cSWminScaled = 1.5;
+    cSWmaxScaled = 3;
+    pSWminScaled = 1.5;
+    pSWmaxScaled = 3;
   }
 
-  globalConfig.unusedCircles.strokeWeight = random(
+  globalConfig.unusedCircles.baseStrokeWeight = random(
     globalConfig.unusedCircles.strokeWeightMin,
     globalConfig.unusedCircles.strokeWeightMax
   );
-
-  for (let i = 0; i < numActiveLayers; i++) {
-    let layer = layerConfigs[i];
-    layer.usedCircles.strokeBrush = selectedBrush;
-    layer.usedCircles.strokeColor = random(selectedPalette.colors);
-    layer.usedCircles.strokeWeight = random(
-      circleStrokeWeightMin,
-      circleStrokeWeightMax
-    );
-    layer.usedCircles.hatchEnabled = random() > 0.5;
-    if (layer.usedCircles.hatchEnabled) {
-      layer.usedCircles.hatchBrush =
-        layer.usedCircles.hatchBrush ||
-        strokeStyles[floor(random(strokeStyles.length))].name;
-      layer.usedCircles.hatchRand = random(0, 0.3);
-      layer.usedCircles.baseHatchRand = layer.usedCircles.hatchRand;
-      layer.usedCircles.hatchDistance = random(1, 8);
-      layer.usedCircles.baseHatchDistance = layer.usedCircles.hatchDistance;
-    }
-    layer.usedCircles.hatchAngle = random(0, 180);
-
-    layer.path.strokeBrush = selectedBrush;
-    layer.path.strokeColor = random(selectedPalette.colors);
-    layer.path.strokeWeight = random(pathStrokeWeightMin, pathStrokeWeightMax);
-    layer.path.hatchEnabled = random() > 0.5;
-    if (layer.path.hatchEnabled) {
-      layer.path.hatchBrush =
-        layer.path.hatchBrush ||
-        strokeStyles[floor(random(strokeStyles.length))].name;
-      layer.path.hatchRand = random(0, 0.3);
-      layer.path.baseHatchRand = layer.path.hatchRand;
-      layer.path.hatchDistance = random(1, 6);
-      layer.path.baseHatchDistance = layer.path.hatchDistance;
-    }
-    layer.path.hatchAngle = random(0, 180);
-  }
-
-  gridSize =
-    (width - 2 * globalConfig.general.margin) / globalConfig.general.numCols;
-
-  console.log("=== Détails de l'œuvre ===");
-  console.log(
-    `Palette sélectionnée : ${
-      selectedPalette.name
-    } (${selectedPalette.colors.join(", ")})`
+  globalConfig.unusedCircles.strokeWeight = constrainStrokeWeight(
+    scaleParameter(globalConfig.unusedCircles.baseStrokeWeight, ratio),
+    0.8,
+    3.5
   );
-  console.log(
-    `Grille : ${globalConfig.general.numCols} x ${globalConfig.general.numRows}`
-  );
-  console.log(`Nombre de couches : ${numActiveLayers}`);
-  for (let i = 0; i < numActiveLayers; i++) {
-    let layer = layerConfigs[i];
-    console.log(`Couche ${i + 1} :`);
-    console.log(`  Nombre de cercles : ${layer.circles.numCircles}`);
-    console.log(
-      `  Cercles utilisés - Brosse: ${
-        layer.usedCircles.strokeBrush
-      }, Couleur: ${
-        layer.usedCircles.strokeColor
-      }, Épaisseur: ${layer.usedCircles.strokeWeight.toFixed(2)}`
-    );
-    console.log(
-      `    Hachurage: ${layer.usedCircles.hatchEnabled ? "Oui" : "Non"}${
-        layer.usedCircles.hatchEnabled
-          ? ` (Brosse: ${
-              layer.usedCircles.hatchBrush
-            }, Distance: ${layer.usedCircles.hatchDistance.toFixed(
-              2
-            )}, Angle: ${layer.usedCircles.hatchAngle.toFixed(
-              2
-            )}, Random: ${layer.usedCircles.hatchRand.toFixed(2)})`
-          : ""
-      }`
-    );
-    console.log(
-      `  Chemin - Brosse: ${layer.path.strokeBrush}, Couleur: ${
-        layer.path.strokeColor
-      }, Épaisseur: ${layer.path.strokeWeight.toFixed(2)}`
-    );
-    console.log(
-      `    Hachurage: ${layer.path.hatchEnabled ? "Oui" : "Non"}${
-        layer.path.hatchEnabled
-          ? ` (Brosse: ${
-              layer.path.hatchBrush
-            }, Distance: ${layer.path.hatchDistance.toFixed(
-              2
-            )}, Angle: ${layer.path.hatchAngle.toFixed(
-              2
-            )}, Random: ${layer.path.hatchRand.toFixed(2)})`
-          : ""
-      }`
-    );
-  }
 
-  drawGrid();
-
+  layers = [];
   for (let i = 0; i < numActiveLayers; i++) {
+    let cfg = layerConfigs[i];
+    if (numActiveLayers === 1) {
+      cfg.circles.numCircles = floor(random(7, 10));
+    } else if (numActiveLayers === 2) {
+      let idx8 = floor(random(2));
+      cfg.circles.numCircles = i === idx8 ? 8 : floor(random(5, 9));
+    } else {
+      let idx8 = floor(random(3));
+      cfg.circles.numCircles = i === idx8 ? 8 : floor(random(5, 9));
+    }
+
+    cfg.usedCircles.strokeBrush = selectedBrush;
+    cfg.usedCircles.strokeColor = random(selectedPalette.colors);
+    cfg.usedCircles.baseStrokeWeight = random(cSWmin, cSWmax);
+    cfg.usedCircles.strokeWeight = constrainStrokeWeight(
+      scaleParameter(cfg.usedCircles.baseStrokeWeight, ratio),
+      cSWminScaled,
+      cSWmaxScaled
+    );
+    cfg.usedCircles.hatchEnabled = random() > 0.5;
+    if (cfg.usedCircles.hatchEnabled) {
+      cfg.usedCircles.hatchBrush =
+        strokeStyles[floor(random(strokeStyles.length))].name;
+      cfg.usedCircles.baseHatchRand = random(0.1, 0.3);
+      cfg.usedCircles.hatchRand = constrainHatchRand(
+        scaleParameter(cfg.usedCircles.baseHatchRand, ratio, 0.3),
+        0.1,
+        0.35
+      );
+      cfg.usedCircles.baseHatchDistance = random(1, 5);
+      cfg.usedCircles.hatchDistance = constrainHatchDistance(
+        scaleParameter(cfg.usedCircles.baseHatchDistance, ratio, 0.3),
+        0.5,
+        4
+      );
+      cfg.usedCircles.hatchAngle = random(0, 180);
+    }
+
+    cfg.path.strokeBrush = selectedBrush;
+    cfg.path.strokeColor = random(selectedPalette.colors);
+    cfg.path.baseStrokeWeight = random(pSWmin, pSWmax);
+    cfg.path.strokeWeight = constrainStrokeWeight(
+      scaleParameter(cfg.path.baseStrokeWeight, ratio),
+      pSWminScaled,
+      pSWmaxScaled
+    );
+    cfg.path.hatchEnabled = random() > 0.5;
+    if (cfg.path.hatchEnabled) {
+      cfg.path.hatchBrush =
+        strokeStyles[floor(random(strokeStyles.length))].name;
+      cfg.path.baseHatchRand = random(0.1, 0.3);
+      cfg.path.hatchRand = constrainHatchRand(
+        scaleParameter(cfg.path.baseHatchRand, ratio, 0.3),
+        0.1,
+        0.35
+      );
+      cfg.path.baseHatchDistance = random(1, 4);
+      cfg.path.hatchDistance = constrainHatchDistance(
+        scaleParameter(cfg.path.baseHatchDistance, ratio, 0.3),
+        0.5,
+        3.5
+      );
+      cfg.path.hatchAngle = random(0, 180);
+    }
+
     let layer = {
-      config: layerConfigs[i],
+      config: cfg,
       circles: [],
       selectedPath: null,
       initialRotation: null,
     };
     generateCirclesForLayer(layer);
-    let result = indefiniteFindValidPathForLayer(layer);
-    if (result) {
-      layer.selectedPath = result.path;
-    } else {
-      console.error(`Couche ${i + 1} - Aucun chemin valide trouvé !`);
-    }
+    let res = indefiniteFindValidPathForLayer(layer);
+    if (res) layer.selectedPath = res.path;
     layers.push(layer);
   }
 
+  // Logs pour débogage
+  console.log(`Canvas size: ${size}, Ratio: ${ratio.toFixed(3)}`);
+  layers.forEach((layer, i) => {
+    console.log(`Layer ${i + 1}:`);
+    console.log(
+      `  usedCircles - strokeWeight: ${layer.config.usedCircles.strokeWeight.toFixed(
+        2
+      )}, hatchDistance: ${
+        layer.config.usedCircles.hatchDistance?.toFixed(2) || "N/A"
+      }, hatchRand: ${layer.config.usedCircles.hatchRand?.toFixed(2) || "N/A"}`
+    );
+    console.log(
+      `  path - strokeWeight: ${layer.config.path.strokeWeight.toFixed(
+        2
+      )}, hatchDistance: ${
+        layer.config.path.hatchDistance?.toFixed(2) || "N/A"
+      }, hatchRand: ${layer.config.path.hatchRand?.toFixed(2) || "N/A"}`
+    );
+  });
+}
+
+/***********************************
+ * SETUP & RESIZE
+ ***********************************/
+function setup() {
+  pixelDensity(2);
+  const cont = document.getElementById("p5-container");
+  const size = cont ? cont.offsetWidth : globalConfig.general.canvasWidth;
+  createCanvas(size, size, WEBGL).parent("p5-container");
+  background("rgb(244,245,239)");
+  brush.load();
+  initLayers();
+  drawGrid();
   drawAllLayers();
-  //createNoiseFilter();
   const loader = document.getElementById("loader");
   if (loader) loader.style.display = "none";
 }
 
+function windowResized() {
+  const cont = document.getElementById("p5-container");
+  const size = cont ? cont.offsetWidth : globalConfig.general.canvasWidth;
+  resizeCanvas(size, size);
+  background("rgb(244,245,239)");
+  brush.load();
+  initLayers();
+  drawGrid();
+  drawAllLayers();
+}
+
+/***********************************
+ * FONCTIONS DE DESSIN
+ ***********************************/
 function drawGrid() {
   stroke(globalConfig.general.gridStrokeColor);
   strokeWeight(globalConfig.general.gridStrokeWeight);
@@ -628,6 +632,101 @@ function drawGrid() {
   }
 }
 
+function drawAllLayers() {
+  drawUnusedCircles(globalConfig);
+  for (let i = 0; i < layers.length; i++) {
+    drawCirclesAndNumbersForLayer(layers[i]);
+    if (layers[i].selectedPath) drawCompletePathWithBrushForLayer(layers[i]);
+  }
+}
+
+function drawUnusedCircles(config) {
+  let allUsedPositions = layers.flatMap((l) => l.circles);
+  for (let col = 0; col < globalConfig.general.numCols; col++) {
+    for (let row = 0; row < globalConfig.general.numRows; row++) {
+      let x = globalConfig.general.margin + col * gridSize + gridSize / 2;
+      let y = globalConfig.general.margin + row * gridSize + gridSize / 2;
+      let pos = toWebGLCoords(x, y);
+      if (!allUsedPositions.some((p) => dist(p.x, p.y, pos.x, pos.y) < 1)) {
+        drawBrushCircle(
+          pos.x,
+          pos.y,
+          gridSize * globalConfig.general.circleRadiusRatio -
+            config.unusedCircles.strokeWeight / 2,
+          config.unusedCircles.strokeBrush,
+          config.unusedCircles.strokeColor,
+          config.unusedCircles.strokeWeight,
+          config.unusedCircles.hatchEnabled,
+          config.unusedCircles.hatchBrush,
+          config.unusedCircles.hatchDistance,
+          config.unusedCircles.hatchRand,
+          config.unusedCircles.hatchAngle
+        );
+      }
+    }
+  }
+}
+
+function drawCirclesAndNumbersForLayer(layer) {
+  let radius =
+    gridSize * globalConfig.general.circleRadiusRatio -
+    layer.config.usedCircles.strokeWeight / 2;
+  for (let i = 0; i < layer.circles.length; i++) {
+    let c = layer.circles[i];
+    drawBrushCircle(
+      c.x,
+      c.y,
+      radius,
+      layer.config.usedCircles.strokeBrush,
+      layer.config.usedCircles.strokeColor,
+      layer.config.usedCircles.strokeWeight,
+      layer.config.usedCircles.hatchEnabled,
+      layer.config.usedCircles.hatchBrush,
+      layer.config.usedCircles.hatchDistance,
+      layer.config.usedCircles.hatchRand,
+      layer.config.usedCircles.hatchAngle
+    );
+  }
+}
+
+function drawCompletePathWithBrushForLayer(layer) {
+  brush.noHatch();
+  brush.noFill();
+  brush.set(
+    layer.config.path.strokeBrush,
+    layer.config.path.strokeColor,
+    layer.config.path.strokeWeight
+  );
+  if (
+    layer.config.path.hatchEnabled &&
+    layer.config.path.hatchDistance &&
+    layer.config.path.hatchAngle
+  ) {
+    brush.setHatch(layer.config.path.hatchBrush, layer.config.path.strokeColor);
+    brush.hatch(layer.config.path.hatchDistance, layer.config.path.hatchAngle, {
+      brush: layer.config.path.hatchBrush,
+      rand: layer.config.path.hatchRand || 0,
+    });
+  }
+
+  brush.beginShape();
+  for (let i = 0; i < layer.selectedPath.length; i++) {
+    let tangent = layer.selectedPath[i];
+    brush.vertex(tangent.p1.x, tangent.p1.y);
+    brush.vertex(tangent.p2.x, tangent.p2.y);
+
+    let arcPoints = computeArcForConnection(i, layer.selectedPath, layer);
+    arcPoints.forEach((p) => {
+      brush.vertex(p.x, p.y);
+    });
+  }
+  brush.endShape(CLOSE);
+  brush.reDraw();
+}
+
+/***********************************
+ * GÉNÉRATION DES CERCLES ET CHEMINS
+ ***********************************/
 function generateCirclesForLayer(layer) {
   let positions = [];
   for (let col = 0; col < globalConfig.general.numCols; col++) {
@@ -690,7 +789,6 @@ function findValidPathForLayer(layer) {
     let toIndex = (i + 1) % layer.config.circles.numCircles;
     let c1 = layer.circles[fromIndex];
     let c2 = layer.circles[toIndex];
-    // Ajustement du rayon de cercle pour les tangentes
     let circleRadius =
       gridSize * globalConfig.general.circleRadiusRatio -
       layer.config.usedCircles.strokeWeight / 2;
@@ -828,7 +926,6 @@ function computeArcForConnection(i, path, layer) {
     (atan2(next.p1.y - circleCenter.y, next.p1.x - circleCenter.x) + TWO_PI) %
     TWO_PI;
   let isCW = current.arcDir === "clockwise";
-  // Ajustement de l'arc pour correspondre au cercle.
   let arcRadius =
     gridSize * globalConfig.general.circleRadiusRatio -
     layer.config.usedCircles.strokeWeight / 2;
@@ -866,98 +963,6 @@ function sampleArc(circleCenter, radius, startAngle, endAngle, isCW, steps) {
   return points;
 }
 
-function drawAllLayers() {
-  drawUnusedCircles(globalConfig);
-  for (let i = 0; i < layers.length; i++) {
-    drawCirclesAndNumbersForLayer(layers[i]);
-    if (layers[i].selectedPath) drawCompletePathWithBrushForLayer(layers[i]);
-  }
-}
-
-function drawUnusedCircles(config) {
-  let allUsedPositions = layers.flatMap((l) => l.circles);
-  for (let col = 0; col < globalConfig.general.numCols; col++) {
-    for (let row = 0; row < globalConfig.general.numRows; row++) {
-      let x = globalConfig.general.margin + col * gridSize + gridSize / 2;
-      let y = globalConfig.general.margin + row * gridSize + gridSize / 2;
-      let pos = toWebGLCoords(x, y);
-      if (!allUsedPositions.some((p) => dist(p.x, p.y, pos.x, pos.y) < 1)) {
-        drawBrushCircle(
-          pos.x,
-          pos.y,
-          gridSize * globalConfig.general.circleRadiusRatio -
-            config.unusedCircles.strokeWeight / 2,
-          config.unusedCircles.strokeBrush,
-          config.unusedCircles.strokeColor,
-          config.unusedCircles.strokeWeight,
-          config.unusedCircles.hatchEnabled,
-          config.unusedCircles.hatchBrush,
-          config.unusedCircles.hatchDistance,
-          config.unusedCircles.hatchRand,
-          config.unusedCircles.hatchAngle
-        );
-      }
-    }
-  }
-}
-
-function drawCirclesAndNumbersForLayer(layer) {
-  let radius =
-    gridSize * globalConfig.general.circleRadiusRatio -
-    layer.config.usedCircles.strokeWeight / 2;
-  for (let i = 0; i < layer.circles.length; i++) {
-    let c = layer.circles[i];
-    drawBrushCircle(
-      c.x,
-      c.y,
-      radius,
-      layer.config.usedCircles.strokeBrush,
-      layer.config.usedCircles.strokeColor,
-      layer.config.usedCircles.strokeWeight,
-      layer.config.usedCircles.hatchEnabled,
-      layer.config.usedCircles.hatchBrush,
-      layer.config.usedCircles.hatchDistance,
-      layer.config.usedCircles.hatchRand,
-      layer.config.usedCircles.hatchAngle
-    );
-  }
-}
-
-function drawCompletePathWithBrushForLayer(layer) {
-  brush.noHatch();
-  brush.noFill();
-  brush.set(
-    layer.config.path.strokeBrush,
-    layer.config.path.strokeColor,
-    layer.config.path.strokeWeight
-  );
-  if (
-    layer.config.path.hatchEnabled &&
-    layer.config.path.hatchDistance &&
-    layer.config.path.hatchAngle
-  ) {
-    brush.setHatch(layer.config.path.hatchBrush, layer.config.path.strokeColor);
-    brush.hatch(layer.config.path.hatchDistance, layer.config.path.hatchAngle, {
-      brush: layer.config.path.hatchBrush,
-      rand: layer.config.path.hatchRand || 0,
-    });
-  }
-
-  brush.beginShape();
-  for (let i = 0; i < layer.selectedPath.length; i++) {
-    let tangent = layer.selectedPath[i];
-    brush.vertex(tangent.p1.x, tangent.p1.y);
-    brush.vertex(tangent.p2.x, tangent.p2.y);
-
-    let arcPoints = computeArcForConnection(i, layer.selectedPath, layer);
-    arcPoints.forEach((p) => {
-      brush.vertex(p.x, p.y);
-    });
-  }
-  brush.endShape(CLOSE);
-  brush.reDraw();
-}
-
 function getTangents(c1, c2, r) {
   let dx = c2.x - c1.x,
     dy = c2.y - c1.y,
@@ -991,13 +996,6 @@ function doLinesCross(p1, p2, p3, p4) {
   return o(p1, p2, p3) !== o(p1, p2, p4) && o(p3, p4, p1) !== o(p3, p4, p2);
 }
 
-function shuffleArray(array) {
-  for (let i = array.length - 1; i > 0; i--) {
-    let j = floor(random() * (i + 1));
-    [array[i], array[j]] = [array[j], array[i]];
-  }
-}
-
 function createNoiseFilter() {
   let noiseFilter = createGraphics(width, height);
   noiseFilter.pixelDensity(1);
@@ -1012,35 +1010,7 @@ function createNoiseFilter() {
   image(noiseFilter, -width / 2, -height / 2);
 }
 
-function getAllPermutations(array) {
-  if (array.length <= 1) return [array];
-  let result = [];
-  for (let i = 0; i < array.length; i++) {
-    let current = array[i];
-    let remaining = array.slice(0, i).concat(array.slice(i + 1));
-    let perms = getAllPermutations(remaining);
-    for (let perm of perms) {
-      result.push([current].concat(perm));
-    }
-  }
-  return result;
-}
-
-function isPermutationValid(perm, originalCircles) {
-  let n = perm.length;
-  for (let i = 0; i < n; i++) {
-    let c1 = originalCircles[perm[i]];
-    let c2 = originalCircles[perm[(i + 1) % n]];
-    let c3 = originalCircles[perm[(i + 2) % n]];
-    if (
-      (abs(c1.y - c2.y) < 1 && abs(c2.y - c3.y) < 1) ||
-      (abs(c1.x - c2.x) < 1 && abs(c2.x - c3.x) < 1)
-    )
-      return false;
-  }
-  return true;
-}
-
-windowResized = handleResizeAndDraw;
-
+/***********************************
+ * INITIALISATION
+ ***********************************/
 new p5();
