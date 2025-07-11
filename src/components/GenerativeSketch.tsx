@@ -1,21 +1,20 @@
 "use client";
 import React, { useEffect, useRef } from "react";
-import { P5Instance } from "p5";
+import p5 from "p5"; // Import par défaut
 
 interface GenerativeSketchProps {
   regenerateTrigger: number;
 }
 
-// Définir une interface pour la fonction createSketch
 interface WindowWithSketch extends Window {
-  createSketch: (containerId: string) => P5Instance;
+  createSketch?: (containerId: string) => p5; // Utiliser p5 comme type
 }
 
 export default function GenerativeSketch({
   regenerateTrigger,
 }: GenerativeSketchProps) {
   const containerRef = useRef<HTMLDivElement>(null);
-  const instanceRef = useRef<P5Instance | null>(null); // Remplacer any par P5Instance | null
+  const instanceRef = useRef<p5 | null>(null); // Utiliser p5 comme type
 
   const initSketch = () => {
     // Supprime l’ancienne instance (canvas + listeners)
@@ -28,7 +27,8 @@ export default function GenerativeSketch({
       containerRef.current.innerHTML = "";
     }
     // Instancie le sketch
-    const factory = (window as WindowWithSketch).createSketch; // Utiliser l'interface définie
+    const windowWithSketch = window as unknown as WindowWithSketch;
+    const factory = windowWithSketch.createSketch;
     if (typeof factory === "function") {
       instanceRef.current = factory("p5-container");
     } else {
