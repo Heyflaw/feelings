@@ -1,4 +1,5 @@
 import { Redis } from "@upstash/redis";
+import { NextApiRequest, NextApiResponse } from "next";
 
 const redis = new Redis({
   url: process.env.KV_REST_API_URL,
@@ -8,7 +9,16 @@ const redis = new Redis({
 const WHITELIST_KEY = "whitelist";
 const MAX_WALLETS = 100;
 
-export default async function handler(req, res) {
+interface ApiResponse {
+  list?: string[];
+  total?: number;
+  message?: string;
+}
+
+export default async function handler(
+  req: NextApiRequest,
+  res: NextApiResponse<ApiResponse>
+) {
   try {
     if (req.method === "GET") {
       // Récupérer la liste des adresses depuis Redis
@@ -17,7 +27,7 @@ export default async function handler(req, res) {
     }
 
     if (req.method === "POST") {
-      const { address } = req.body;
+      const { address } = req.body as { address?: string };
       if (!address) {
         return res.status(400).json({ message: "Address is required" });
       }
