@@ -17,11 +17,10 @@ function escapeHtml(unsafe: string): string {
     .replace(/</g, "&lt;")
     .replace(/>/g, "&gt;")
     .replace(/"/g, "&quot;")
-    .replace(/'/g, "&#039;");
+    .replace(/'/g, "&#39;");
 }
 
 export default function HomePage() {
-  const MAX_WALLETS = 100;
   const [regenerateTrigger, setRegenerateTrigger] = useState(0);
   const { login, logout } = useLoginWithAbstract();
   const { address, isConnected } = useAccount();
@@ -31,16 +30,23 @@ export default function HomePage() {
   const [joined, setJoined] = useState(false);
   const [message, setMessage] = useState("");
   const [count, setCount] = useState(0);
+  const [maxWallets, setMaxWallets] = useState(100); // Valeur par défaut initiale
 
-  const percent = Math.round((count / MAX_WALLETS) * 100);
-  const isFull = count >= MAX_WALLETS;
+  const percent = Math.round((count / maxWallets) * 100);
+  const isFull = count >= maxWallets;
 
-  // GET total au montage
+  // GET total et maxWallets au montage
   useEffect(() => {
     fetch("/api/join-whitelist")
       .then((res) => res.json())
-      .then(({ total }) => setCount(total))
-      .catch(() => setCount(0));
+      .then(({ total, maxWallets }) => {
+        setCount(total ?? 0);
+        setMaxWallets(maxWallets ?? 100); // Valeur par défaut si maxWallets est undefined
+      })
+      .catch(() => {
+        setCount(0);
+        setMaxWallets(100);
+      });
   }, []);
 
   // Vérif de l’adresse connectée
@@ -65,27 +71,36 @@ export default function HomePage() {
       })
         .then(async (res) => {
           const data = await res.json();
+          console.log("API response:", data); // Log pour déboguer
           if (res.ok) {
             setMessage(`✅ ${escapeHtml(data.message)}`);
             setJoined(true);
-            setCount(data.total);
+            setCount(data.total ?? count);
+            setMaxWallets(data.maxWallets ?? maxWallets);
           } else if (res.status === 409) {
             setMessage(`⚠️ ${escapeHtml(data.message)}`);
             setJoined(true);
-            setCount(data.total);
+            setCount(data.total ?? count);
+            setMaxWallets(data.maxWallets ?? maxWallets);
           } else {
             setMessage(`❌ ${escapeHtml(data.message)}`);
+            setCount(data.total ?? count);
+            setMaxWallets(data.maxWallets ?? maxWallets);
           }
         })
-        .catch(() => setMessage("❌ Network error."))
+        .catch(() => {
+          setMessage("❌ Network error.");
+          setCount(count);
+        })
         .finally(() => setJoinRequested(false));
     }
-  }, [joinRequested, address]);
+  }, [joinRequested, address, count, maxWallets]); // Ajouter count et maxWallets comme dépendances
 
   const handleJoinClick = () => {
     setJoinRequested(true);
     login();
   };
+
   const handleDisconnect = () => {
     disconnect();
     logout();
@@ -109,7 +124,7 @@ export default function HomePage() {
             Born from a tough year, <b>Feelings</b> is a generative art project
             coded in p5.js. It’s about bringing emotions, both the good and the
             bad, to life, transforming them into something visible. Hit
-            &quot;Generate&quot; to discover a new one.
+            "Generate" to discover a new one.
           </p>
           <div className="mint-info">
             <p>
@@ -205,8 +220,7 @@ export default function HomePage() {
               />
             </div>
             <p className="progress-text">
-              {count} / {MAX_WALLETS} listed ({percent}
-              %)
+              {count} / {maxWallets} listed ({percent}%)
             </p>
           </div>
 
