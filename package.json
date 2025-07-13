@@ -12,6 +12,7 @@
     "@abstract-foundation/agw-client": "latest",
     "@abstract-foundation/agw-react": "latest",
     "@tanstack/react-query": "^5.71.5",
+    "@upstash/redis": "^1.35.1",
     "next": "15.2.4",
     "p5": "1.11.0",
     "p5.brush": "^1.1.4",

@@ -392,14 +392,14 @@ function initLayers() {
       pSWmaxScaled = 3;
       break;
     case "charcoal":
-      cSWmin = 0.5;
-      cSWmax = 1.2;
-      pSWmin = 0.5;
-      pSWmax = 1.2;
-      cSWminScaled = 0.8;
-      cSWmaxScaled = 1.5;
-      pSWminScaled = 0.8;
-      pSWmaxScaled = 1.5;
+      cSWmin = 0.2;
+      cSWmax = 1;
+      pSWmin = 0.2;
+      pSWmax = 1;
+      cSWminScaled = 0.5;
+      cSWmaxScaled = 1.2;
+      pSWminScaled = 0.5;
+      pSWmaxScaled = 1.2;
       break;
     case "2B":
       cSWmin = 1.5;
