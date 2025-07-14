@@ -94,7 +94,7 @@ export default function HomePage() {
         })
         .finally(() => setJoinRequested(false));
     }
-  }, [joinRequested, address, count, maxWallets]); // Ajouter count et maxWallets comme dépendances
+  }, [joinRequested, address, count, maxWallets]);
 
   const handleJoinClick = () => {
     setJoinRequested(true);
@@ -124,7 +124,7 @@ export default function HomePage() {
             Born from a tough year, <b>Feelings</b> is a generative art project
             coded in p5.js. It’s about bringing emotions, both the good and the
             bad, to life, transforming them into something visible. Hit
-            "Generate" to discover a new one.
+            &quot;Generate&quot; to discover a new one.
           </p>
           <div className="mint-info">
             <p>
