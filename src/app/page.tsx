@@ -251,14 +251,15 @@ export default function HomePage() {
         />
         <meta
           property="og:image"
-          content="https://feelings-rho.vercel.app/image-feelings.png"
+          content="https://opengraph.b-cdn.net/production/images/3e0a80bc-3fa3-491b-b747-d92f5846e1ae.png?token=mLgo0WLEkKLngiHMzhxrHFXfdXudVWzw82iUt00hndo&height=530&width=1200&expires=33288589790"
         />
         <meta property="og:url" content="https://feelings-rho.vercel.app/" />
         <meta property="og:type" content="website" />
         <meta name="twitter:card" content="summary_large_image" />
+
         <meta
           name="twitter:image"
-          content="https://feelings-rho.vercel.app/image-feelings.png"
+          content="https://opengraph.b-cdn.net/production/images/3e0a80bc-3fa3-491b-b747-d92f5846e1ae.png?token=mLgo0WLEkKLngiHMzhxrHFXfdXudVWzw82iUt00hndo&height=530&width=1200&expires=33288589790"
         />
         <meta name="twitter:title" content="Feelings – Generative Art" />
         <meta
