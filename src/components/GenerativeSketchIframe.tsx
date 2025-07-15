@@ -1,4 +1,3 @@
-// src/components/GenerativeSketchIframe.tsx
 "use client";
 
 import React, { useState, useEffect } from "react";
@@ -16,9 +15,14 @@ export default function GenerativeSketchIframe({
 }: GenerativeSketchIframeProps) {
   const [loading, setLoading] = useState(true);
 
-  // Relance le loader à chaque regénération
   useEffect(() => {
-    setLoading(true);
+    console.log(
+      "GenerativeSketchIframe mounted with regenerateTrigger:",
+      regenerateTrigger
+    );
+    return () => {
+      console.log("GenerativeSketchIframe unmounted");
+    };
   }, [regenerateTrigger]);
 
   return (
@@ -67,7 +71,7 @@ export default function GenerativeSketchIframe({
       )}
       <iframe
         key={regenerateTrigger}
-        src="/sketch/index.html"
+        src={`/sketch/index.html?t=${regenerateTrigger}`}
         style={{
           width: "100%",
           height: "100%",
@@ -75,7 +79,13 @@ export default function GenerativeSketchIframe({
           display: "block",
         }}
         allow="fullscreen"
-        onLoad={() => setLoading(false)}
+        onLoad={() => {
+          console.log(
+            "Iframe loaded with regenerateTrigger:",
+            regenerateTrigger
+          );
+          setLoading(false);
+        }}
       />
       <style jsx>{`
         .loader-overlay {
