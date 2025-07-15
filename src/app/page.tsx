@@ -251,14 +251,14 @@ export default function HomePage() {
         />
         <meta
           property="og:image"
-          content="https://your-vercel-app.vercel.app/image-feelings.png"
+          content="https://feelings-rho.vercel.app/image-feelings.png"
         />
-        <meta property="og:url" content="https://your-vercel-app.vercel.app" />
+        <meta property="og:url" content="https://feelings-rho.vercel.app/" />
         <meta property="og:type" content="website" />
         <meta name="twitter:card" content="summary_large_image" />
         <meta
           name="twitter:image"
-          content="https://your-vercel-app.vercel.app/image-feelings.png"
+          content="https://feelings-rho.vercel.app/image-feelings.png"
         />
         <meta name="twitter:title" content="Feelings – Generative Art" />
         <meta
