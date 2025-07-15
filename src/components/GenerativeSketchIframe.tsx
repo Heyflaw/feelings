@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 
 interface GenerativeSketchIframeProps {
   regenerateTrigger: number;
@@ -14,6 +14,7 @@ export default function GenerativeSketchIframe({
   height = "100%",
 }: GenerativeSketchIframeProps) {
   const [loading, setLoading] = useState(true);
+  const iframeRef = useRef<HTMLIFrameElement>(null);
 
   useEffect(() => {
     console.log(
@@ -23,6 +24,12 @@ export default function GenerativeSketchIframe({
     return () => {
       console.log("GenerativeSketchIframe unmounted");
     };
+  }, [regenerateTrigger]);
+
+  useEffect(() => {
+    if (iframeRef.current) {
+      console.log("Iframe src:", iframeRef.current.src);
+    }
   }, [regenerateTrigger]);
 
   return (
@@ -40,7 +47,7 @@ export default function GenerativeSketchIframe({
                 repeatCount="indefinite"
                 values="15;5;15"
                 keyTimes="0;0.5;1"
-              ></animate>
+              />
             </circle>
             <circle cx="60" cy="15" r="10" fill="#616161">
               <animate
@@ -52,7 +59,7 @@ export default function GenerativeSketchIframe({
                 repeatCount="indefinite"
                 values="15;5;15"
                 keyTimes="0;0.5;1"
-              ></animate>
+              />
             </circle>
             <circle cx="90" cy="15" r="10" fill="#616161">
               <animate
@@ -64,14 +71,15 @@ export default function GenerativeSketchIframe({
                 repeatCount="indefinite"
                 values="15;5;15"
                 keyTimes="0;0.5;1"
-              ></animate>
+              />
             </circle>
           </svg>
         </div>
       )}
       <iframe
+        ref={iframeRef}
         key={regenerateTrigger}
-        src={`/sketch/index.html?t=${regenerateTrigger}`}
+        src="/sketch/index.html"
         style={{
           width: "100%",
           height: "100%",

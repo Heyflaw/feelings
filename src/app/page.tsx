@@ -37,6 +37,7 @@ const SketchSection = React.memo(
   (prevProps, nextProps) =>
     prevProps.regenerateTrigger === nextProps.regenerateTrigger
 );
+SketchSection.displayName = "SketchSection";
 
 // Composant pour la section whitelist
 const WhitelistSection = React.memo(
@@ -64,6 +65,7 @@ const WhitelistSection = React.memo(
 
     // GET total et maxWallets au montage
     useEffect(() => {
+      console.log("Fetching whitelist data");
       fetch("/api/join-whitelist")
         .then((res) => res.json())
         .then(({ total, maxWallets }) => {
@@ -82,6 +84,7 @@ const WhitelistSection = React.memo(
         setJoined(false);
         return;
       }
+      console.log("Checking wallet address:", address);
       fetch("/api/join-whitelist")
         .then((res) => res.json())
         .then(({ list }) => setJoined(list.includes(address)))
@@ -91,6 +94,7 @@ const WhitelistSection = React.memo(
     // POST join
     useEffect(() => {
       if (joinRequested && address) {
+        console.log("Sending join request for address:", address);
         fetch("/api/join-whitelist", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
@@ -124,11 +128,13 @@ const WhitelistSection = React.memo(
     }, [joinRequested, address, count, maxWallets]);
 
     const handleJoinClick = () => {
+      console.log("Join button clicked");
       setJoinRequested(true);
       login();
     };
 
     const handleDisconnect = () => {
+      console.log("Disconnect button clicked");
       disconnect();
       logout();
       setJoined(false);
@@ -150,8 +156,8 @@ const WhitelistSection = React.memo(
               <div className="wl-btn">LIST FULL FOR NOW</div>
             </div>
             <p className="full-message">
-              Heads up! The list’s completely full right now, but we’re opening up
-              more spots soon. Follow{" "}
+              Heads up! The list’s completely full right now, but we’re opening
+              up more spots soon. Follow{" "}
               <a
                 href="https://x.com/Heyflaw"
                 target="_blank"
@@ -194,10 +200,7 @@ const WhitelistSection = React.memo(
 
         <div className="progress-wrapper">
           <div className="progress">
-            <div
-              className="progress-value"
-              style={{ width: `${percent}%` }}
-            />
+            <div className="progress-value" style={{ width: `${percent}%` }} />
           </div>
           <p className="progress-text">
             {count} / {maxWallets} listed ({percent}%)
@@ -214,6 +217,7 @@ const WhitelistSection = React.memo(
     );
   }
 );
+WhitelistSection.displayName = "WhitelistSection";
 
 export default function HomePage() {
   const [regenerateTrigger, setRegenerateTrigger] = useState(0);
@@ -247,14 +251,14 @@ export default function HomePage() {
         />
         <meta
           property="og:image"
-          content="https://feelings-three.vercel.app/image-feelings.png"
+          content="https://your-vercel-app.vercel.app/image-feelings.png"
         />
-        <meta property="og:url" content="https://feelings-three.vercel.app/" />
+        <meta property="og:url" content="https://your-vercel-app.vercel.app" />
         <meta property="og:type" content="website" />
         <meta name="twitter:card" content="summary_large_image" />
         <meta
           name="twitter:image"
-          content="https://feelings-three.vercel.app/image-feelings.png"
+          content="https://your-vercel-app.vercel.app/image-feelings.png"
         />
         <meta name="twitter:title" content="Feelings – Generative Art" />
         <meta
@@ -271,9 +275,10 @@ export default function HomePage() {
           <section className="intro-section">
             <div className="intro-titre">A story of resilience.</div>
             <p className="text-feeling">
-              Born from a tough year, <b>Feelings</b> is a generative art project
-              coded in p5.js. It’s about bringing emotions, both the good and the
-              bad, to life, transforming them into something visible. Hit
+              Born from a tough year, <b>Feelings</b> is a generative art
+              project coded in p5.js. It’s about bringing emotions, both the
+              good and the bad, to life, transforming them into something
+              visible. Hit
               <b> Generate </b> to discover a new one.
             </p>
             <div className="mint-info">
