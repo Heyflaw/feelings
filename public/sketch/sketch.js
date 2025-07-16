@@ -8,11 +8,11 @@
  ***********************************/
 const strokeStyles = [
   //{ name: "pen", probability: 15 },
-  { name: "charcoal", probability: 15 },
-  //{ name: "2B", probability: 10 },
-  //{ name: "HB", probability: 10 },
+  { name: "charcoal", probability: 80 },
+  { name: "2B", probability: 4 },
+  { name: "HB", probability: 4 },
   //{ name: "2H", probability: 10 },
-  { name: "marker", probability: 10 },
+  { name: "marker", probability: 2 },
 ];
 
 /***********************************
