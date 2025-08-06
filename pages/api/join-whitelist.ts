@@ -8,7 +8,7 @@ const redis = new Redis({
 });
 
 const WHITELIST_KEY = "whitelist";
-const MAX_WALLETS = 125;
+const MAX_WALLETS = 140;
 
 interface ApiResponse {
   list?: string[];
